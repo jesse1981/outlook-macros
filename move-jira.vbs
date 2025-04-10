@@ -29,7 +29,7 @@ Private Sub inboxItems_ItemAdd(ByVal Item As Object)
             Dim inbox As Outlook.MAPIFolder
             Set inbox = Session.GetDefaultFolder(olFolderInbox)
 
-            ' Look for the "BAU" folder under Inbox
+            ' Locate the BAU folder
             Dim bauFolder As Outlook.MAPIFolder
             Set bauFolder = Nothing
             Dim subFolder As Outlook.MAPIFolder
@@ -41,21 +41,20 @@ Private Sub inboxItems_ItemAdd(ByVal Item As Object)
             Next
 
             If bauFolder Is Nothing Then
-                ' If BAU doesn't exist, fallback to Inbox
-                Set bauFolder = inbox
+                Set bauFolder = inbox ' Fallback to Inbox if BAU isn't found
             End If
 
-            ' Look for ticket folder under BAU
+            ' Look for or create the ticket folder under BAU
             Dim targetFolder As Outlook.MAPIFolder
             Set targetFolder = FindFolderByName(bauFolder, ticketID)
 
             If targetFolder Is Nothing Then
-                ' Folder doesn't exist under BAU – create it
                 Set targetFolder = bauFolder.Folders.Add(ticketID)
             End If
 
             mail.Move targetFolder
         ElseIf senderAddress = "jira@jdausteam.atlassian.net" Then
+            ' JIRA email with no ticket match
             MoveToBAU mail
         End If
     End If
@@ -83,10 +82,10 @@ Sub MoveToBAU(mail As Outlook.MailItem)
     On Error Resume Next
     Dim inbox As Outlook.MAPIFolder
     Set inbox = Session.GetDefaultFolder(olFolderInbox)
-    
+
     Dim bauFolder As Outlook.MAPIFolder
     Set bauFolder = Nothing
-    
+
     ' Look for the "BAU" folder in Inbox
     Dim subFolder As Outlook.MAPIFolder
     For Each subFolder In inbox.Folders
@@ -96,3 +95,7 @@ Sub MoveToBAU(mail As Outlook.MailItem)
         End If
     Next
 
+    If Not bauFolder Is Nothing Then
+        mail.Move bauFolder
+    End If
+End Sub
